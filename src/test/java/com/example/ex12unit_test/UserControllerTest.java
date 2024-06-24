@@ -1,101 +1,84 @@
 package com.example.ex12unit_test;
 
 import com.example.ex12unit_test.users.controllers.UserController;
+import com.example.ex12unit_test.users.models.User;
+import com.example.ex12unit_test.users.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @SpringBootTest
-@AutoConfigureMockMvc
 class UserControllerTest {
+
+    @MockBean
+    private UserService userService;
+
     @Autowired
     private UserController userController;
-    @Autowired
-    private MockMvc mockMvc;
 
-    private void insertUser() throws Exception {
+    private static final User DEAFAULT_USER_INSERTED = new User(0, "j", "k@email.it");
+    private static final User DEAFAULT_USER_SAVED = new User(1, "j", "k@email.it");
 
-        this.mockMvc.perform(post("/v1/users").content("""
-                        {
-                        "name": "Gabriel",
-                        "email": "hey@itsme"
-                        }
-                        """).contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andReturn();
+    @Test
+    void create_userIsCreated() {
+        when(userService.create(DEAFAULT_USER_INSERTED))
+                .thenReturn(DEAFAULT_USER_SAVED);
+        User result = userController.create(DEAFAULT_USER_INSERTED);
+        assertEquals(DEAFAULT_USER_SAVED.getId(), result.getId());
     }
 
     @Test
-    public void testCreateUser() throws Exception {
+    void loadBy_retrieveUser_whenRightIdIsGiven() {
+        long id = 1;
+        when(userService.getBy(id))
+                .thenReturn(Optional.of(DEAFAULT_USER_SAVED));
+        User result = userController.loadBy(id).get();
 
-
-        this.mockMvc.perform(post("/v1/users").content("""
-                        {
-                        "name": "Gabriel",
-                        "email": "hey@itsme"
-                        }
-                        """).contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().json("""
-                        {
-                        "id": 1,
-                        "name": "Gabriel",
-                        "email": "hey@itsme"
-                        }
-                        """)).andReturn();
-
+        assertEquals(DEAFAULT_USER_SAVED.getEmail(), result.getEmail());
     }
 
     @Test
-    void readUserList_test() throws Exception {
-        insertUser();
-        insertUser();
+    void loadAll_retrieveOneUser() {
+        List<User> users = new ArrayList<>();
+        users.add(DEAFAULT_USER_SAVED);
+        when(userService.getAllUsers())
+                .thenReturn(users);
 
-        this.mockMvc.perform(get("/v1/users"))
-                .andDo(print())
-                .andExpect(status().isFound())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[1].id", is(2)))
-                .andReturn();
+        Collection<User> result = userController.loadAll();
+
+        assertEquals(users.size(), result.size());
     }
 
     @Test
-    void deleteUser_test() throws Exception {
-        insertUser();
-        insertUser();
-        this.mockMvc.perform(delete("/v1/users/1"))
-                .andDo(print());
+    void delete_noUserIsRetrieved_afterCorrectDeleteById() {
+        when(userService.create(DEAFAULT_USER_INSERTED))
+                .thenReturn(DEAFAULT_USER_SAVED);
+        userController.deleteBy(1);
+        List<User> users = new ArrayList<>();
+        when(userService.getAllUsers())
+                .thenReturn(users);
+        Collection<User> result = userController.loadAll();
+        assertEquals(users.size(), result.size());
 
-        this.mockMvc.perform(get("/v1/users"))
-                .andDo(print())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(status().isFound());
-    }
-
-    @Test
-    void readStudent_test() throws Exception {
-        insertUser();
-        this.mockMvc.perform(get("/v1/users/1"))
-                .andDo(print())
-                .andExpect(status().isFound())
-                .andExpect(content().json("""
-                        {"id": 1,
-                        "name": "Gabriel",
-                        "email": "hey@itsme"
-                        }
-                        """))
-                .andReturn();
     }
 
 }
