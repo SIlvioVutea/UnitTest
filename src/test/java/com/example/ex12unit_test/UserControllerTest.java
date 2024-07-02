@@ -35,8 +35,8 @@ class UserControllerTest {
     @Autowired
     private UserController userController;
 
-    private static final User DEAFAULT_USER_INSERTED = new User(0, "j", "k@email.it");
-    private static final User DEAFAULT_USER_SAVED = new User(1, "j", "k@email.it");
+    private static final User DEAFAULT_USER_INSERTED = new User(0, "Silvio", "silviovutea@gmail.com");
+    private static final User DEAFAULT_USER_SAVED = new User(1, "Silvio", "silviovutea@gmail.com");
 
     @Test
     void create_userIsCreated() {

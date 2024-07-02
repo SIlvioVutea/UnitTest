@@ -16,11 +16,13 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public User create(@RequestBody User user) {
     return userService.create(user);
     }
+
 
     @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/{id}")
@@ -28,11 +30,13 @@ public class UserController {
         return userService.getBy(id);
     }
 
+
     @ResponseStatus(HttpStatus.FOUND)
     @GetMapping
     public Collection<User> loadAll(){
         return userService.getAllUsers();
     }
+
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @DeleteMapping("/{id}")
